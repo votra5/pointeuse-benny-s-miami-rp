@@ -236,7 +236,6 @@
                                 <option value="expert mecano">Expert Mécano</option>
                                 <option value="super mecano">Super Mécano</option>
                                 <option value="co patron">Co Patron</option>
-                                <option value="patron" id="opt-patron-hidden" class="hidden">Patron</option>
                             </select>
                             <button class="btn-orange" style="width: 100%; margin-bottom: 10px;" onclick="modifierGrade()">Mettre à jour le grade</button>
                             <button class="btn-red" style="width: 100%;" onclick="licencierEmploye()">❌ Licencier l'employé</button>
@@ -266,10 +265,9 @@
     </div>
 
     <script>
-        // BASE DE DONNÉES LOCALE
         let employes = {
             "ekartin": { nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", statut: "Hors Service", tempsTotal: 0 },
-            "testmeco": { nom: "Bro", prenom: "Jean", mdp: "123", grade: "mécano", statut: "Hors Service", tempsTotal: 3600 }
+            "testmeco": { nom: "Bro", prenom: "Jean", mdp: "123", grade: "mécano", statut: "Hors Service", tempsTotal: 0 }
         };
 
         let utilisateurConnecte = null;
@@ -283,7 +281,7 @@
 
             if (employes[userIn] && employes[userIn].mdp === passIn) {
                 utilisateurConnecte = employes[userIn];
-                utilisateurConnecte.idActuel = userIn; // garde l'id en mémoire
+                utilisateurConnecte.idActuel = userIn;
                 errorText.innerText = "";
                 
                 document.getElementById("login-page").classList.add("hidden");
@@ -292,7 +290,6 @@
                 document.getElementById("user-display-name").innerText = `${utilisateurConnecte.prenom} ${utilisateurConnecte.nom}`;
                 document.getElementById("role-tag").innerText = utilisateurConnecte.grade.toUpperCase();
                 
-                // Si Patron ou Co Patron -> Afficher le panneau secret
                 if(utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron") {
                     document.getElementById("boss-section").classList.remove("hidden");
                     actualiserListesGestion();
@@ -330,7 +327,6 @@
                 return;
             }
 
-            // Première lettre prénom + nom de famille collé (ex: ekartin)
             const identifiant = (prenom.charAt(0) + nom).toLowerCase().replace(/\s+/g, '');
 
             if(employes[identifiant]) {
@@ -358,7 +354,6 @@
             setTimeout(() => { successText.innerText = ""; }, 5000);
         }
 
-        // Charger les actions de modification quand on choisit un employé
         function chargerInfosGestion() {
             const selectUser = document.getElementById("manage-select-user").value;
             const actionArea = document.getElementById("manage-actions-area");
@@ -372,7 +367,6 @@
             document.getElementById("edit-grade").value = employes[selectUser].grade;
         }
 
-        // Modifier le grade d'une personne
         function modifierGrade() {
             const selectUser = document.getElementById("manage-select-user").value;
             const newGrade = document.getElementById("edit-grade").value;
@@ -380,17 +374,11 @@
 
             if(!selectUser) return;
 
-            if(employes[selectUser].grade === "patron" && utilisateurConnecte.grade !== "patron") {
-                alert("Vous ne pouvez pas modifier le grade du Patron !");
-                return;
-            }
-
             employes[selectUser].grade = newGrade;
             successText.innerText = `Le grade de ${employes[selectUser].prenom} a été modifié en [${newGrade}].`;
             
             actualiserTableau();
             
-            // Si on se modifie soi-même (ex: le co-patron change son grade)
             if(selectUser === utilisateurConnecte.idActuel) {
                 document.getElementById("role-tag").innerText = newGrade.toUpperCase();
             }
@@ -398,7 +386,6 @@
             setTimeout(() => { successText.innerText = ""; }, 4000);
         }
 
-        // Licencier quelqu'un (Supprimer du site)
         function licencierEmploye() {
             const selectUser = document.getElementById("manage-select-user").value;
             if(!selectUser) return;
@@ -408,7 +395,7 @@
                 return;
             }
 
-            const confirmation = confirm(`Êtes-vous sûr de vouloir LICENCIER ${employes[selectUser].prenom} ${employes[selectUser].nom} ? Cela supprimera son compte.`);
+            const confirmation = confirm(`Licencier ${employes[selectUser].prenom} ${employes[selectUser].nom} ?`);
             
             if(confirmation) {
                 delete employes[selectUser];
@@ -422,13 +409,11 @@
             }
         }
 
-        // Mettre à jour la liste déroulante des employés gérables
         function actualiserListesGestion() {
             const select = document.getElementById("manage-select-user");
             select.innerHTML = '<option value="">-- Choisir un employé --</option>';
 
             for(let id in employes) {
-                // On ne liste pas le patron pour éviter qu'un co-patron ne le vire
                 if(employes[id].grade === "patron" && utilisateurConnecte.grade !== "patron") continue;
                 
                 const option = document.createElement("option");
