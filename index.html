@@ -154,6 +154,10 @@
             color: #f1c40f;
         }
     </style>
+
+    <!-- INCLUSION DE FIREBASE SANS PASSER PAR NPM -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -246,7 +250,7 @@
             </div>
         </div>
 
-        <!-- TABLEAU DU TEMPS DE SERVICE (VISIBLE PAR TOUS) -->
+        <!-- TABLEAU DU TEMPS DE SERVICE -->
         <h2>⏱️ Temps de Service & Équipe</h2>
         <table>
             <thead>
@@ -265,14 +269,52 @@
     </div>
 
     <script>
-        let employes = {
-            "ekartin": { nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", statut: "Hors Service", tempsTotal: 0 },
-            "testmeco": { nom: "Bro", prenom: "Jean", mdp: "123", grade: "mécano", statut: "Hors Service", tempsTotal: 0 }
+        // CONFIGURATION FIREBASE AVEC TES CLÉS DE L'IMAGE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyx62TclM2bxwYVyNDsobt14YVSUlntN8",
+            authDomain: "benny-s-pointeuse.firebaseapp.com",
+            projectId: "benny-s-pointeuse",
+            storageBucket: "benny-s-pointeuse.firebasestorage.app",
+            messagingSenderId: "435045039350",
+            appId: "1:435045039350:web:10432245f801b6541900d7",
+            measurementId: "G-ZR8YC3BNLE"
         };
 
+        // Initialisation de Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let employes = {};
         let utilisateurConnecte = null;
         let timerService = null;
         let tempsSession = 0;
+
+        // ÉCOUTE DES DONNÉES EN TEMPS RÉEL
+        database.ref('employes').on('value', (snapshot) => {
+            employes = snapshot.val() || {};
+            
+            // Si l'ancienne base est vide, on crée automatiquement le compte patron par défaut
+            if (!employes["ekartin"]) {
+                database.ref('employes/ekartin').set({
+                    nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", statut: "Hors Service", tempsTotal: 0
+                });
+            }
+
+            // Si l'utilisateur actuel est en train de regarder la page, on met à jour les listes
+            if (utilisateurConnecte) {
+                // Actualiser l'objet utilisateur avec les données du serveur
+                utilisateurConnecte = employes[utilisateurConnecte.idActuel];
+                utilisateurConnecte.idActuel = document.getElementById("username").value.trim().toLowerCase();
+                
+                if (utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron") {
+                    document.getElementById("boss-section").classList.remove("hidden");
+                    actualiserListesGestion();
+                } else {
+                    document.getElementById("boss-section").classList.add("hidden");
+                }
+            }
+            actualiserTableau();
+        });
 
         function connexion() {
             const userIn = document.getElementById("username").value.trim().toLowerCase();
@@ -334,24 +376,21 @@
                 return;
             }
 
-            employes[identifiant] = {
+            // ENREGISTREMENT SUR LE SERVEUR FIREBASE
+            database.ref('employes/' + identifiant).set({
                 nom: nom,
                 prenom: prenom,
                 mdp: mdp,
                 grade: grade,
                 statut: "Hors Service",
                 tempsTotal: 0
-            };
-
-            successText.innerText = `Profil créé ! Identifiant : ${identifiant}`;
-            
-            document.getElementById("new-firstname").value = "";
-            document.getElementById("new-lastname").value = "";
-            document.getElementById("new-password").value = "";
-
-            actualiserTableau();
-            actualiserListesGestion();
-            setTimeout(() => { successText.innerText = ""; }, 5000);
+            }).then(() => {
+                successText.innerText = `Profil créé ! Identifiant : ${identifiant}`;
+                document.getElementById("new-firstname").value = "";
+                document.getElementById("new-lastname").value = "";
+                document.getElementById("new-password").value = "";
+                setTimeout(() => { successText.innerText = ""; }, 5000);
+            });
         }
 
         function chargerInfosGestion() {
@@ -374,16 +413,16 @@
 
             if(!selectUser) return;
 
-            employes[selectUser].grade = newGrade;
-            successText.innerText = `Le grade de ${employes[selectUser].prenom} a été modifié en [${newGrade}].`;
-            
-            actualiserTableau();
-            
-            if(selectUser === utilisateurConnecte.idActuel) {
-                document.getElementById("role-tag").innerText = newGrade.toUpperCase();
-            }
-
-            setTimeout(() => { successText.innerText = ""; }, 4000);
+            // METTRE À JOUR LE GRADE SUR FIREBASE
+            database.ref('employes/' + selectUser).update({
+                grade: newGrade
+            }).then(() => {
+                successText.innerText = `Le grade de ${employes[selectUser].prenom} a été modifié en [${newGrade}].`;
+                if(selectUser === utilisateurConnecte.idActuel) {
+                    document.getElementById("role-tag").innerText = newGrade.toUpperCase();
+                }
+                setTimeout(() => { successText.innerText = ""; }, 4000);
+            });
         }
 
         function licencierEmploye() {
@@ -395,22 +434,22 @@
                 return;
             }
 
-            const confirmation = confirm(`Licencier ${employes[selectUser].prenom} ${employes[selectUser].nom} ?`);
+            const confirmation = confirm(`Licencier définitivement ${employes[selectUser].prenom} ${employes[selectUser].nom} ?`);
             
             if(confirmation) {
-                delete employes[selectUser];
-                document.getElementById("manage-select-user").value = "";
-                document.getElementById("manage-actions-area").classList.add("hidden");
-                document.getElementById("manage-success").innerText = "Employé licencié avec succès.";
-                
-                actualiserTableau();
-                actualiserListesGestion();
-                setTimeout(() => { document.getElementById("manage-success").innerText = ""; }, 4000);
+                // SUPPRIMER DE FIREBASE
+                database.ref('employes/' + selectUser).remove().then(() => {
+                    document.getElementById("manage-select-user").value = "";
+                    document.getElementById("manage-actions-area").classList.add("hidden");
+                    document.getElementById("manage-success").innerText = "Employé licencié avec succès.";
+                    setTimeout(() => { document.getElementById("manage-success").innerText = ""; }, 4000);
+                });
             }
         }
 
         function actualiserListesGestion() {
             const select = document.getElementById("manage-select-user");
+            const valeurActuelle = select.value;
             select.innerHTML = '<option value="">-- Choisir un employé --</option>';
 
             for(let id in employes) {
@@ -421,6 +460,7 @@
                 option.innerText = `${employes[id].prenom} ${employes[id].nom} (${employes[id].grade})`;
                 select.appendChild(option);
             }
+            select.value = valeurActuelle;
         }
 
         function changerStatut(action) {
@@ -430,10 +470,12 @@
             const btnEnd = document.getElementById("btn-end");
 
             if (action === 'en service') {
-                utilisateurConnecte.statut = "En Service";
                 statusEl.innerText = "En Service";
                 statusEl.className = "status-active";
                 btnStart.disabled = true; btnPause.disabled = false; btnEnd.disabled = false;
+
+                // Mettre à jour le statut en ligne
+                database.ref('employes/' + utilisateurConnecte.idActuel).update({ statut: "En Service" });
 
                 timerService = setInterval(() => {
                     tempsSession++;
@@ -441,23 +483,29 @@
                 }, 1000);
 
             } else if (action === 'en pause') {
-                utilisateurConnecte.statut = "En Pause";
                 statusEl.innerText = "En Pause";
                 statusEl.className = "status-paused";
                 btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
                 clearInterval(timerService);
+                
+                database.ref('employes/' + utilisateurConnecte.idActuel).update({ statut: "En Pause" });
 
             } else if (action === 'fin') {
-                utilisateurConnecte.tempsTotal += tempsSession;
-                tempsSession = 0;
                 clearInterval(timerService);
-                utilisateurConnecte.statut = "Hors Service";
+                let nouveauTemps = (utilisateurConnecte.tempsTotal || 0) + tempsSession;
+                tempsSession = 0;
+                
+                document.getElementById("live-timer").innerText = "";
                 statusEl.innerText = "Hors Service";
                 statusEl.className = "status-off";
                 btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
-                document.getElementById("live-timer").innerText = "";
+                
+                // Enregistrer le temps cumulé sur Firebase
+                database.ref('employes/' + utilisateurConnecte.idActuel).update({
+                    statut: "Hors Service",
+                    tempsTotal: nouveauTemps
+                });
             }
-            actualiserTableau();
         }
 
         function actualiserInterfaceService() {
@@ -481,7 +529,7 @@
                     <td><span class="badge-grade">${emp.grade.toUpperCase()}</span></td>
                     <td><code>${id}</code></td>
                     <td><span class="${emp.statut === 'En Service' ? 'status-active' : emp.statut === 'En Pause' ? 'status-paused' : 'status-off'}">${emp.statut}</span></td>
-                    <td><strong>${formatTemps(emp.tempsTotal)}</strong></td>
+                    <td><strong>${formatTemps(emp.tempsTotal || 0)}</strong></td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -493,8 +541,6 @@
             const s = secondes % 60;
             return `${h}h ${m}m ${s}s`;
         }
-
-        actualiserTableau();
     </script>
 </body>
 </html>
