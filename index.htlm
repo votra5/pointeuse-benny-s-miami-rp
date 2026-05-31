@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion d'Entreprise - Bennys Miami RP</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --green: #2ecc71;
+            --orange: #e67e22;
+            --red: #e74c3c;
+            --blue: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+            color: #f1c40f;
+            margin-top: 0;
+        }
+
+        .hidden { display: none !important; }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label { margin-bottom: 5px; font-weight: bold; }
+        input, select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        .btn-blue { background-color: var(--blue); width: 100%; }
+        .btn-green { background-color: var(--green); }
+        .btn-orange { background-color: var(--orange); }
+        .btn-red { background-color: var(--red); }
+
+        .status-box {
+            text-align: center;
+            padding: 15px;
+            background: #222;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .status-active { color: var(--green); font-weight: bold; }
+        .status-paused { color: var(--orange); font-weight: bold; }
+        .status-off { color: var(--red); font-weight: bold; }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button:disabled {
+            background-color: #555 !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .boss-panel {
+            border: 2px dashed #f1c40f;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .boss-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .boss-box {
+            background: #222;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        th { background-color: #222; color: #f1c40f; }
+
+        .header-site {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .badge-grade {
+            background: #444;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ZONE DE CONNEXION -->
+    <div id="login-page" class="container">
+        <h1>Connexion Bennys Miami RP</h1>
+        <div class="form-group">
+            <label>Identifiant :</label>
+            <input type="text" id="username" placeholder="Ex: ekartin">
+        </div>
+        <div class="form-group">
+            <label>Mot de passe :</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+        <button class="btn-blue" onclick="connexion()">Se connecter</button>
+        <p id="login-error" style="color: var(--red); text-align:center; font-weight:bold;"></p>
+    </div>
+
+    <!-- ZONE TABLEAU DE BORD (CONNECTÉ) -->
+    <div id="dashboard-page" class="container hidden">
+        <div class="header-site">
+            <div>Bonjour, <strong id="user-display-name">...</strong> <span id="role-tag" class="badge-grade"></span></div>
+            <button class="btn-red" style="padding: 5px 10px; font-size: 12px;" onclick="deconnexion()">Déconnexion</button>
+        </div>
+
+        <!-- Statut actuel -->
+        <div class="status-box">
+            Statut actuel : <span id="current-status" class="status-off">Hors Service</span>
+            <div id="live-timer" style="font-size: 14px; margin-top: 5px; color: #aaa;"></div>
+        </div>
+
+        <!-- Boutons de service -->
+        <div class="btn-grid">
+            <button id="btn-start" class="btn-green" onclick="changerStatut('en service')">Prise de Service</button>
+            <button id="btn-pause" class="btn-orange" onclick="changerStatut('en pause')" disabled>Pause</button>
+            <button id="btn-end" class="btn-red" onclick="changerStatut('fin')" disabled>Fin de Service</button>
+        </div>
+
+        <!-- PANNEAU PATRON & CO-PATRON -->
+        <div id="boss-section" class="boss-panel hidden">
+            <h3>👑 Panneau de Gestion (Patron / Co-Patron)</h3>
+            
+            <div class="boss-grid">
+                <!-- Bloc Création -->
+                <div class="boss-box">
+                    <h4>Créer un profil</h4>
+                    <div class="form-group">
+                        <input type="text" id="new-firstname" placeholder="Prénom" style="margin-bottom: 8px;">
+                        <input type="text" id="new-lastname" placeholder="Nom" style="margin-bottom: 8px;">
+                        <input type="password" id="new-password" placeholder="Mot de passe" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px; margin-top: 5px;">Grade :</label>
+                        <select id="new-grade">
+                            <option value="recru">Recru</option>
+                            <option value="mécano">Mécano</option>
+                            <option value="pro mécano">Pro Mécano</option>
+                            <option value="expert mecano">Expert Mécano</option>
+                            <option value="super mecano">Super Mécano</option>
+                            <option value="co patron">Co Patron</option>
+                        </select>
+                    </div>
+                    <button class="btn-blue" onclick="creerEmploye()">Créer l'employé</button>
+                    <p id="creation-success" style="color: var(--green); font-size: 13px; margin-top: 5px;"></p>
+                </div>
+
+                <!-- Bloc Modification / Licenciement -->
+                <div class="boss-box">
+                    <h4>Gérer un employé</h4>
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Sélectionner l'employé :</label>
+                        <select id="manage-select-user" onchange="chargerInfosGestion()">
+                            <option value="">-- Choisir un employé --</option>
+                        </select>
+                        
+                        <div id="manage-actions-area" class="hidden" style="margin-top: 15px;">
+                            <label style="font-size: 12px;">Modifier le grade :</label>
+                            <select id="edit-grade" style="margin-bottom: 10px;">
+                                <option value="recru">Recru</option>
+                                <option value="mécano">Mécano</option>
+                                <option value="pro mécano">Pro Mécano</option>
+                                <option value="expert mecano">Expert Mécano</option>
+                                <option value="super mecano">Super Mécano</option>
+                                <option value="co patron">Co Patron</option>
+                                <option value="patron" id="opt-patron-hidden" class="hidden">Patron</option>
+                            </select>
+                            <button class="btn-orange" style="width: 100%; margin-bottom: 10px;" onclick="modifierGrade()">Mettre à jour le grade</button>
+                            <button class="btn-red" style="width: 100%;" onclick="licencierEmploye()">❌ Licencier l'employé</button>
+                        </div>
+                    </div>
+                    <p id="manage-success" style="color: var(--green); font-size: 13px; margin-top: 5px;"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLEAU DU TEMPS DE SERVICE (VISIBLE PAR TOUS) -->
+        <h2>⏱️ Temps de Service & Équipe</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Employé</th>
+                    <th>Grade</th>
+                    <th>Identifiant</th>
+                    <th>Statut Actuel</th>
+                    <th>Temps Total</th>
+                </tr>
+            </thead>
+            <tbody id="temps-table-body">
+                <!-- Rempli en JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // BASE DE DONNÉES LOCALE
+        let employes = {
+            "ekartin": { nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", statut: "Hors Service", tempsTotal: 0 },
+            "testmeco": { nom: "Bro", prenom: "Jean", mdp: "123", grade: "mécano", statut: "Hors Service", tempsTotal: 3600 }
+        };
+
+        let utilisateurConnecte = null;
+        let timerService = null;
+        let tempsSession = 0;
+
+        function connexion() {
+            const userIn = document.getElementById("username").value.trim().toLowerCase();
+            const passIn = document.getElementById("password").value;
+            const errorText = document.getElementById("login-error");
+
+            if (employes[userIn] && employes[userIn].mdp === passIn) {
+                utilisateurConnecte = employes[userIn];
+                utilisateurConnecte.idActuel = userIn; // garde l'id en mémoire
+                errorText.innerText = "";
+                
+                document.getElementById("login-page").classList.add("hidden");
+                document.getElementById("dashboard-page").classList.remove("hidden");
+                
+                document.getElementById("user-display-name").innerText = `${utilisateurConnecte.prenom} ${utilisateurConnecte.nom}`;
+                document.getElementById("role-tag").innerText = utilisateurConnecte.grade.toUpperCase();
+                
+                // Si Patron ou Co Patron -> Afficher le panneau secret
+                if(utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron") {
+                    document.getElementById("boss-section").classList.remove("hidden");
+                    actualiserListesGestion();
+                } else {
+                    document.getElementById("boss-section").classList.add("hidden");
+                }
+
+                actualiserInterfaceService();
+                actualiserTableau();
+            } else {
+                errorText.innerText = "Identifiant ou mot de passe incorrect.";
+            }
+        }
+
+        function deconnexion() {
+            if(utilisateurConnecte && utilisateurConnecte.statut !== "Hors Service") {
+                changerStatut('fin');
+            }
+            utilisateurConnecte = null;
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("dashboard-page").classList.add("hidden");
+            document.getElementById("login-page").classList.remove("hidden");
+        }
+
+        function creerEmploye() {
+            const prenom = document.getElementById("new-firstname").value.trim();
+            const nom = document.getElementById("new-lastname").value.trim();
+            const mdp = document.getElementById("new-password").value;
+            const grade = document.getElementById("new-grade").value;
+            const successText = document.getElementById("creation-success");
+
+            if(!prenom || !nom || !mdp) {
+                alert("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            // Première lettre prénom + nom de famille collé (ex: ekartin)
+            const identifiant = (prenom.charAt(0) + nom).toLowerCase().replace(/\s+/g, '');
+
+            if(employes[identifiant]) {
+                alert("Cet identifiant existe déjà !");
+                return;
+            }
+
+            employes[identifiant] = {
+                nom: nom,
+                prenom: prenom,
+                mdp: mdp,
+                grade: grade,
+                statut: "Hors Service",
+                tempsTotal: 0
+            };
+
+            successText.innerText = `Profil créé ! Identifiant : ${identifiant}`;
+            
+            document.getElementById("new-firstname").value = "";
+            document.getElementById("new-lastname").value = "";
+            document.getElementById("new-password").value = "";
+
+            actualiserTableau();
+            actualiserListesGestion();
+            setTimeout(() => { successText.innerText = ""; }, 5000);
+        }
+
+        // Charger les actions de modification quand on choisit un employé
+        function chargerInfosGestion() {
+            const selectUser = document.getElementById("manage-select-user").value;
+            const actionArea = document.getElementById("manage-actions-area");
+            
+            if(!selectUser) {
+                actionArea.classList.add("hidden");
+                return;
+            }
+            
+            actionArea.classList.remove("hidden");
+            document.getElementById("edit-grade").value = employes[selectUser].grade;
+        }
+
+        // Modifier le grade d'une personne
+        function modifierGrade() {
+            const selectUser = document.getElementById("manage-select-user").value;
+            const newGrade = document.getElementById("edit-grade").value;
+            const successText = document.getElementById("manage-success");
+
+            if(!selectUser) return;
+
+            if(employes[selectUser].grade === "patron" && utilisateurConnecte.grade !== "patron") {
+                alert("Vous ne pouvez pas modifier le grade du Patron !");
+                return;
+            }
+
+            employes[selectUser].grade = newGrade;
+            successText.innerText = `Le grade de ${employes[selectUser].prenom} a été modifié en [${newGrade}].`;
+            
+            actualiserTableau();
+            
+            // Si on se modifie soi-même (ex: le co-patron change son grade)
+            if(selectUser === utilisateurConnecte.idActuel) {
+                document.getElementById("role-tag").innerText = newGrade.toUpperCase();
+            }
+
+            setTimeout(() => { successText.innerText = ""; }, 4000);
+        }
+
+        // Licencier quelqu'un (Supprimer du site)
+        function licencierEmploye() {
+            const selectUser = document.getElementById("manage-select-user").value;
+            if(!selectUser) return;
+
+            if(employes[selectUser].grade === "patron") {
+                alert("Impossible de licencier le Patron !");
+                return;
+            }
+
+            const confirmation = confirm(`Êtes-vous sûr de vouloir LICENCIER ${employes[selectUser].prenom} ${employes[selectUser].nom} ? Cela supprimera son compte.`);
+            
+            if(confirmation) {
+                delete employes[selectUser];
+                document.getElementById("manage-select-user").value = "";
+                document.getElementById("manage-actions-area").classList.add("hidden");
+                document.getElementById("manage-success").innerText = "Employé licencié avec succès.";
+                
+                actualiserTableau();
+                actualiserListesGestion();
+                setTimeout(() => { document.getElementById("manage-success").innerText = ""; }, 4000);
+            }
+        }
+
+        // Mettre à jour la liste déroulante des employés gérables
+        function actualiserListesGestion() {
+            const select = document.getElementById("manage-select-user");
+            select.innerHTML = '<option value="">-- Choisir un employé --</option>';
+
+            for(let id in employes) {
+                // On ne liste pas le patron pour éviter qu'un co-patron ne le vire
+                if(employes[id].grade === "patron" && utilisateurConnecte.grade !== "patron") continue;
+                
+                const option = document.createElement("option");
+                option.value = id;
+                option.innerText = `${employes[id].prenom} ${employes[id].nom} (${employes[id].grade})`;
+                select.appendChild(option);
+            }
+        }
+
+        function changerStatut(action) {
+            const statusEl = document.getElementById("current-status");
+            const btnStart = document.getElementById("btn-start");
+            const btnPause = document.getElementById("btn-pause");
+            const btnEnd = document.getElementById("btn-end");
+
+            if (action === 'en service') {
+                utilisateurConnecte.statut = "En Service";
+                statusEl.innerText = "En Service";
+                statusEl.className = "status-active";
+                btnStart.disabled = true; btnPause.disabled = false; btnEnd.disabled = false;
+
+                timerService = setInterval(() => {
+                    tempsSession++;
+                    document.getElementById("live-timer").innerText = `Temps session : ${formatTemps(tempsSession)}`;
+                }, 1000);
+
+            } else if (action === 'en pause') {
+                utilisateurConnecte.statut = "En Pause";
+                statusEl.innerText = "En Pause";
+                statusEl.className = "status-paused";
+                btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
+                clearInterval(timerService);
+
+            } else if (action === 'fin') {
+                utilisateurConnecte.tempsTotal += tempsSession;
+                tempsSession = 0;
+                clearInterval(timerService);
+                utilisateurConnecte.statut = "Hors Service";
+                statusEl.innerText = "Hors Service";
+                statusEl.className = "status-off";
+                btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
+                document.getElementById("live-timer").innerText = "";
+            }
+            actualiserTableau();
+        }
+
+        function actualiserInterfaceService() {
+            const statusEl = document.getElementById("current-status");
+            statusEl.innerText = utilisateurConnecte.statut;
+            if(utilisateurConnecte.statut === "En Service") statusEl.className = "status-active";
+            if(utilisateurConnecte.statut === "En Pause") statusEl.className = "status-paused";
+            if(utilisateurConnecte.statut === "Hors Service") statusEl.className = "status-off";
+        }
+
+        function actualiserTableau() {
+            const tbody = document.getElementById("temps-table-body");
+            tbody.innerHTML = "";
+
+            for (let id in employes) {
+                const emp = employes[id];
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${emp.prenom} ${emp.nom}</td>
+                    <td><span class="badge-grade">${emp.grade.toUpperCase()}</span></td>
+                    <td><code>${id}</code></td>
+                    <td><span class="${emp.statut === 'En Service' ? 'status-active' : emp.statut === 'En Pause' ? 'status-paused' : 'status-off'}">${emp.statut}</span></td>
+                    <td><strong>${formatTemps(emp.tempsTotal)}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function formatTemps(secondes) {
+            const h = Math.floor(secondes / 3600);
+            const m = Math.floor((secondes % 3600) / 60);
+            const s = secondes % 60;
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        actualiserTableau();
+    </script>
+</body>
+</html>
