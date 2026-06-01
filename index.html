@@ -77,32 +77,6 @@
         .btn-orange { background-color: var(--orange); }
         .btn-red { background-color: var(--red); }
 
-        .status-box {
-            text-align: center;
-            padding: 15px;
-            background: #222;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        
-        .status-active { color: var(--green); font-weight: bold; }
-        .status-paused { color: var(--orange); font-weight: bold; }
-        .status-off { color: var(--red); font-weight: bold; }
-
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button:disabled {
-            background-color: #555 !important;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
         .boss-panel {
             border: 2px dashed #f1c40f;
             padding: 20px;
@@ -153,6 +127,17 @@
             font-weight: bold;
             color: #f1c40f;
         }
+
+        .salary-input {
+            width: 80px;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #555;
+            background: #111;
+            color: #2ecc71;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 
     <!-- FIREBASE INCLUSION -->
@@ -181,19 +166,6 @@
         <div class="header-site">
             <div>Bonjour, <strong id="user-display-name">...</strong> <span id="role-tag" class="badge-grade"></span></div>
             <button class="btn-red" style="padding: 5px 10px; font-size: 12px;" onclick="deconnexion()">Déconnexion</button>
-        </div>
-
-        <!-- Statut actuel -->
-        <div class="status-box">
-            Statut actuel : <span id="current-status" class="status-off">Hors Service</span>
-            <div id="live-timer" style="font-size: 14px; margin-top: 5px; color: #aaa;"></div>
-        </div>
-
-        <!-- Boutons de service -->
-        <div class="btn-grid">
-            <button id="btn-start" class="btn-green" onclick="changerStatut('en service')">Prise de Service</button>
-            <button id="btn-pause" class="btn-orange" onclick="changerStatut('en pause')" disabled>Pause</button>
-            <button id="btn-end" class="btn-red" onclick="changerStatut('fin')" disabled>Fin de Service</button>
         </div>
 
         <!-- PANNEAU PATRON & CO-PATRON -->
@@ -250,16 +222,15 @@
             </div>
         </div>
 
-        <!-- TABLEAU DU TEMPS DE SERVICE -->
-        <h2>⏱️ Temps de Service & Équipe</h2>
+        <!-- TABLEAU DE L'ÉQUIPE ET DES SALAIRES -->
+        <h2>👥 Liste du Personnel & Salaires</h2>
         <table>
             <thead>
                 <tr>
                     <th>Employé</th>
                     <th>Grade</th>
                     <th>Identifiant</th>
-                    <th>Statut Actuel</th>
-                    <th>Temps Total</th>
+                    <th>Salaire ($)</th>
                 </tr>
             </thead>
             <tbody id="temps-table-body">
@@ -269,7 +240,7 @@
     </div>
 
     <script>
-        // CONFIGURATION CORRIGÉE AVEC LE SERVEUR BELGIQUE
+        // CONFIGURATION DE TA DATABASE EN BELGIQUE
         const firebaseConfig = {
             apiKey: "AIzaSyDyx62TclM2bxwYVyNDsobt14YVSUlntN8",
             authDomain: "benny-s-pointeuse.firebaseapp.com",
@@ -284,17 +255,26 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Ordre d'importance des grades pour le tri du plus haut au plus bas
+        const ordreGrades = {
+            "patron": 1,
+            "co patron": 2,
+            "super mecano": 3,
+            "expert mecano": 4,
+            "pro mécano": 5,
+            "mécano": 6,
+            "recru": 7
+        };
+
         let employes = {};
         let utilisateurConnecte = null;
-        let timerService = null;
-        let tempsSession = 0;
 
         database.ref('employes').on('value', (snapshot) => {
             employes = snapshot.val() || {};
             
             if (!employes["ekartin"]) {
                 database.ref('employes/ekartin').set({
-                    nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", statut: "Hors Service", tempsTotal: 0
+                    nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", salaire: 5000
                 });
             }
 
@@ -335,7 +315,6 @@
                     document.getElementById("boss-section").classList.add("hidden");
                 }
 
-                actualiserInterfaceService();
                 actualiserTableau();
             } else {
                 errorText.innerText = "Identifiant ou mot de passe incorrect.";
@@ -343,9 +322,6 @@
         }
 
         function deconnexion() {
-            if(utilisateurConnecte && utilisateurConnecte.statut !== "Hors Service") {
-                changerStatut('fin');
-            }
             utilisateurConnecte = null;
             document.getElementById("username").value = "";
             document.getElementById("password").value = "";
@@ -373,7 +349,7 @@
             }
 
             database.ref('employes/' + identifiant).set({
-                nom: nom, prenom: prenom, mdp: mdp, grade: grade, statut: "Hors Service", tempsTotal: 0
+                nom: nom, prenom: prenom, mdp: mdp, grade: grade, salaire: 0
             }).then(() => {
                 successText.innerText = `Profil créé ! Identifiant : ${identifiant}`;
                 document.getElementById("new-firstname").value = "";
@@ -422,6 +398,11 @@
             }
         }
 
+        function changerSalaireEnLigne(idEmploye, nouveauSalaire) {
+            let salaireNum = parseInt(nouveauSalaire) || 0;
+            database.ref('employes/' + idEmploye).update({ salaire: salaireNum });
+        }
+
         function actualiserListesGestion() {
             const select = document.getElementById("manage-select-user");
             const valeurActuelle = select.value;
@@ -437,68 +418,48 @@
             select.value = valeurActuelle;
         }
 
-        function changerStatut(action) {
-            const statusEl = document.getElementById("current-status");
-            const btnStart = document.getElementById("btn-start");
-            const btnPause = document.getElementById("btn-pause");
-            const btnEnd = document.getElementById("btn-end");
-
-            if (action === 'en service') {
-                statusEl.innerText = "En Service"; statusEl.className = "status-active";
-                btnStart.disabled = true; btnPause.disabled = false; btnEnd.disabled = false;
-                database.ref('employes/' + utilisateurConnecte.idActuel).update({ statut: "En Service" });
-
-                timerService = setInterval(() => {
-                    tempsSession++;
-                    document.getElementById("live-timer").innerText = `Temps session : ${formatTemps(tempsSession)}`;
-                }, 1000);
-            } else if (action === 'en pause') {
-                statusEl.innerText = "En Pause"; statusEl.className = "status-paused";
-                btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
-                clearInterval(timerService);
-                database.ref('employes/' + utilisateurConnecte.idActuel).update({ statut: "En Pause" });
-            } else if (action === 'fin') {
-                clearInterval(timerService);
-                let nouveauTemps = (utilisateurConnecte.tempsTotal || 0) + tempsSession;
-                tempsSession = 0;
-                document.getElementById("live-timer").innerText = "";
-                statusEl.innerText = "Hors Service"; statusEl.className = "status-off";
-                btnStart.disabled = false; btnPause.disabled = true; btnEnd.disabled = true;
-                database.ref('employes/' + utilisateurConnecte.idActuel).update({ statut: "Hors Service", tempsTotal: nouveauTemps });
-            }
-        }
-
-        function actualiserInterfaceService() {
-            const statusEl = document.getElementById("current-status");
-            statusEl.innerText = utilisateurConnecte.statut;
-            if(utilisateurConnecte.statut === "En Service") statusEl.className = "status-active";
-            if(utilisateurConnecte.statut === "En Pause") statusEl.className = "status-paused";
-            if(utilisateurConnecte.statut === "Hors Service") statusEl.className = "status-off";
-        }
-
         function actualiserTableau() {
             const tbody = document.getElementById("temps-table-body");
             tbody.innerHTML = "";
 
+            // Convertir l'objet Firebase en tableau pour pouvoir trier
+            let listeTrie = [];
             for (let id in employes) {
-                const emp = employes[id];
+                listeTrie.push({ id: id, ...employes[id] });
+            }
+
+            // Tri par grade (du plus haut au plus bas)
+            listeTrie.sort((a, b) => {
+                let ordreA = ordreGrades[a.grade] || 99;
+                let ordreB = ordreGrades[b.grade] || 99;
+                return ordreA - ordreB;
+            });
+
+            // Déterminer si l'utilisateur connecté est Patron ou Co-Patron
+            let aLeDroitModif = false;
+            if (utilisateurConnecte && (utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron")) {
+                aLeDroitModif = true;
+            }
+
+            listeTrie.forEach((emp) => {
                 const tr = document.createElement("tr");
+                let celluleSalaire = "";
+
+                // Si c'est le patron ou co-patron, on met un champ modifiable, sinon du texte simple
+                if (aLeDroitModif) {
+                    celluleSalaire = `<td><input type="number" class="salary-input" value="${emp.salaire || 0}" onchange="changerSalaireEnLigne('${emp.id}', this.value)"> $</td>`;
+                } else {
+                    celluleSalaire = `<td><strong style="color: #2ecc71;">${emp.salaire || 0} $</strong></td>`;
+                }
+
                 tr.innerHTML = `
                     <td>${emp.prenom} ${emp.nom}</td>
                     <td><span class="badge-grade">${emp.grade.toUpperCase()}</span></td>
-                    <td><code>${id}</code></td>
-                    <td><span class="${emp.statut === 'En Service' ? 'status-active' : emp.statut === 'En Pause' ? 'status-paused' : 'status-off'}">${emp.statut}</span></td>
-                    <td><strong>${formatTemps(emp.tempsTotal || 0)}</strong></td>
+                    <td><code>${emp.id}</code></td>
+                    ${celluleSalaire}
                 `;
                 tbody.appendChild(tr);
-            }
-        }
-
-        function formatTemps(secondes) {
-            const h = Math.floor(secondes / 3600);
-            const m = Math.floor((secondes % 3600) / 60);
-            const s = secondes % 60;
-            return `${h}h ${m}m ${s}s`;
+            });
         }
     </script>
 </body>
