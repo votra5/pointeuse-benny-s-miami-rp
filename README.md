@@ -1,2 +1,2 @@
-# pointeuse-benny-s-miami-rp
+# Gestionnaire des ventes
 pointeuse
