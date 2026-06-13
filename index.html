@@ -3,227 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion d'Entreprise - Bennys Miami RP</title>
+    <title>Gestion des Salaires</title>
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #ffffff;
-            --green: #2ecc71;
-            --orange: #e67e22;
-            --red: #e74c3c;
-            --blue: #3498db;
+        /* Styles Globaux */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
+            background-color: #222222;
+            color: #ffffff;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--card-bg);
+            min-height: 100vh;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
         }
 
-        h1, h2, h3 {
-            text-align: center;
-            color: #f1c40f;
-            margin-top: 0;
-        }
-
-        .hidden { display: none !important; }
-
-        .form-group {
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
             margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
+            border-radius: 6px;
+            border: 1px solid #3a3a3a;
+            background-color: #1a1a1a;
+            color: white;
+            font-size: 14px;
         }
 
-        label { margin-bottom: 5px; font-weight: bold; }
-        input, select {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #222;
-            color: white;
-            font-size: 16px;
+        input::placeholder {
+            color: #555;
         }
 
         button {
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
+            background-color: #3498db;
             color: white;
-            font-size: 14px;
-            cursor: pointer;
+            border: none;
             font-weight: bold;
-            transition: opacity 0.2s;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        button:hover { opacity: 0.9; }
-        .btn-blue { background-color: var(--blue); width: 100%; }
-        .btn-green { background-color: var(--green); }
-        .btn-orange { background-color: var(--orange); }
-        .btn-red { background-color: var(--red); }
+        button:hover {
+            background-color: #2980b9;
+        }
 
-        .boss-panel {
-            border: 2px dashed #f1c40f;
-            padding: 20px;
-            border-radius: 5px;
+        label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 1. Page de Connexion */
+        .login-container {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .login-title {
+            color: #f1c40f;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        /* 2. Tableau de Bord (Dashboard) */
+        .dashboard-container {
+            display: none; /* Masqué par défaut */
+            width: 100%;
+            max-width: 950px;
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        .header-dash {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
-        .boss-grid {
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .badge-dev { background-color: #9b59b6; color: #fff; }
+        .badge-patron { background-color: #f1c40f; color: #000; }
+        .badge-copatron { background-color: #e67e22; color: #fff; }
+        .badge-chef { background-color: #2ecc71; color: #fff; }
+        .badge-employe { background-color: #3498db; color: #fff; }
+        .badge-recru { background-color: #7f8c8d; color: #fff; }
+
+        .btn-logout {
+            background-color: #e74c3c;
+            width: auto;
+            padding: 8px 15px;
+            margin: 0;
+        }
+        .btn-logout:hover { background-color: #c0392b; }
+
+        /* Panneau de Gestion */
+        .management-panel {
+            border: 2px dashed #f1c40f;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .panel-title {
+            color: #f1c40f;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .panel-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
-        .boss-box {
-            background: #222;
+        @media (max-width: 600px) {
+            .panel-grid { grid-template-columns: 1fr; }
+        }
+
+        .sub-panel {
+            background-color: #222222;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 6px;
+        }
+
+        /* Section Liste du Personnel */
+        .list-title {
+            color: #f1c40f;
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 15px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         th, td {
-            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #444;
+            padding: 12px;
+            border-bottom: 1px solid #3a3a3a;
         }
 
-        th { background-color: #222; color: #f1c40f; }
-
-        .header-site {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .badge-grade {
-            background: #444;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
+        th {
             color: #f1c40f;
+            font-weight: bold;
+        }
+
+        .salary-input-container {
+            display: flex;
+            align-items: center;
         }
 
         .salary-input {
-            width: 80px;
+            width: 90px;
             padding: 5px;
-            border-radius: 3px;
-            border: 1px solid #555;
-            background: #111;
+            margin: 0 5px 0 0;
+            text-align: center;
+            background-color: #111;
             color: #2ecc71;
             font-weight: bold;
-            text-align: center;
+            border: 1px solid #333;
         }
     </style>
-
-    <!-- FIREBASE INCLUSION -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-    <!-- ZONE DE CONNEXION -->
-    <div id="login-page" class="container">
-        <h1>Connexion Bennys Miami RP</h1>
-        <div class="form-group">
-            <label>Identifiant :</label>
-            <input type="text" id="username" placeholder="Ex: ekartin">
-        </div>
-        <div class="form-group">
-            <label>Mot de passe :</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-        <button class="btn-blue" onclick="connexion()">Se connecter</button>
-        <p id="login-error" style="color: var(--red); text-align:center; font-weight:bold;"></p>
+    <div class="login-container" id="loginPage">
+        <h1 class="login-title">Gestion des salaires</h1>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <label for="username">Identifiant :</label>
+            <input type="text" id="username" placeholder="Ex: ekartin" required>
+
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+
+            <button type="submit">Se connecter</button>
+        </form>
     </div>
 
-    <!-- ZONE TABLEAU DE BORD (CONNECTÉ) -->
-    <div id="dashboard-page" class="container hidden">
-        <div class="header-site">
-            <div>Bonjour, <strong id="user-display-name">...</strong> <span id="role-tag" class="badge-grade"></span></div>
-            <button class="btn-red" style="padding: 5px 10px; font-size: 12px;" onclick="deconnexion()">Déconnexion</button>
+    <div class="dashboard-container" id="dashboardPage">
+        <div class="header-dash">
+            <div>
+                Bonjour, <strong id="sessionName">Elyot Kartin</strong> 
+                <span id="sessionBadge" class="badge">GRADE</span>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Déconnexion</button>
         </div>
 
-        <!-- PANNEAU PATRON & CO-PATRON -->
-        <div id="boss-section" class="boss-panel hidden">
-            <h3>👑 Panneau de Gestion (Patron / Co-Patron)</h3>
+        <div class="management-panel" id="adminPanel">
+            <h2 class="panel-title">👑 Panneau de Gestion (Dev / Patron / Co-Patron)</h2>
             
-            <div class="boss-grid">
-                <!-- Bloc Création -->
-                <div class="boss-box">
-                    <h4>Créer un profil</h4>
-                    <div class="form-group">
-                        <input type="text" id="new-firstname" placeholder="Prénom" style="margin-bottom: 8px;">
-                        <input type="text" id="new-lastname" placeholder="Nom" style="margin-bottom: 8px;">
-                        <input type="password" id="new-password" placeholder="Mot de passe" style="margin-bottom: 8px;">
-                        <label style="font-size: 12px; margin-top: 5px;">Grade :</label>
-                        <select id="new-grade">
+            <div class="panel-grid">
+                <div class="sub-panel">
+                    <h3>Recruter un employé</h3>
+                    <form id="createProfileForm" onsubmit="handleCreateEmployee(event)">
+                        <input type="text" id="newFirstName" placeholder="Prénom" required>
+                        <input type="text" id="newLastName" placeholder="Nom" required>
+                        <input type="password" id="newPassword" placeholder="Mot de passe" required>
+                        
+                        <label for="newGrade">Grade :</label>
+                        <select id="newGrade">
                             <option value="recru">Recru</option>
-                            <option value="mécano">Mécano</option>
-                            <option value="pro mécano">Pro Mécano</option>
-                            <option value="expert mecano">Expert Mécano</option>
-                            <option value="super mecano">Super Mécano</option>
-                            <option value="co patron">Co Patron</option>
+                            <option value="employé">Employé</option>
+                            <option value="chef d'équipe">Chef d'équipe</option>
+                            <option value="co-patron">Co-Patron</option>
+                            <option value="patron">Patron</option>
                         </select>
-                    </div>
-                    <button class="btn-blue" onclick="creerEmploye()">Créer l'employé</button>
-                    <p id="creation-success" style="color: var(--green); font-size: 13px; margin-top: 5px;"></p>
+                        <button type="submit">Recruter l'employé</button>
+                    </form>
                 </div>
 
-                <!-- Bloc Modification / Licenciement -->
-                <div class="boss-box">
-                    <h4>Gérer un employé</h4>
-                    <div class="form-group">
-                        <label style="font-size: 12px;">Sélectionner l'employé :</label>
-                        <select id="manage-select-user" onchange="chargerInfosGestion()">
-                            <option value="">-- Choisir un employé --</option>
+                <div class="sub-panel">
+                    <h3>Gérer un employé</h3>
+                    <label for="selectEmployee">Sélectionner l'employé :</label>
+                    <select id="selectEmployee" onchange="handleSelectEmployee(this.value)">
+                        <option value="">-- Choisir un employé --</option>
+                    </select>
+                    
+                    <div id="employeeActions" style="display:none; margin-top: 15px;">
+                        <label for="changeGradeSelect">Modifier le grade :</label>
+                        <select id="changeGradeSelect">
+                            <option value="recru">Recru</option>
+                            <option value="employé">Employé</option>
+                            <option value="chef d'équipe">Chef d'équipe</option>
+                            <option value="co-patron">Co-Patron</option>
+                            <option value="patron">Patron</option>
+                            <option value="dev">Dev</option>
                         </select>
-                        
-                        <div id="manage-actions-area" class="hidden" style="margin-top: 15px;">
-                            <label style="font-size: 12px;">Modifier le grade :</label>
-                            <select id="edit-grade" style="margin-bottom: 10px;">
-                                <option value="recru">Recru</option>
-                                <option value="mécano">Mécano</option>
-                                <option value="pro mécano">Pro Mécano</option>
-                                <option value="expert mecano">Expert Mécano</option>
-                                <option value="super mecano">Super Mécano</option>
-                                <option value="co patron">Co Patron</option>
-                            </select>
-                            <button class="btn-orange" style="width: 100%; margin-bottom: 10px;" onclick="modifierGrade()">Mettre à jour le grade</button>
-                            <button class="btn-red" style="width: 100%;" onclick="licencierEmploye()">❌ Licencier l'employé</button>
-                        </div>
+                        <button style="background-color: #27ae60; margin-bottom: 10px;" onclick="changeEmployeeGrade()">Valider le changement de grade</button>
+                        <button style="background-color: #e74c3c;" onclick="deleteEmployee()">Virer / Supprimer l'employé</button>
                     </div>
-                    <p id="manage-success" style="color: var(--green); font-size: 13px; margin-top: 5px;"></p>
                 </div>
             </div>
         </div>
 
-        <!-- TABLEAU DE L'ÉQUIPE ET DES SALAIRES -->
-        <h2>👥 Liste du Personnel & Salaires</h2>
+        <h2 class="list-title">📊 Liste du Personnel & Salaires</h2>
         <table>
             <thead>
                 <tr>
@@ -233,233 +270,224 @@
                     <th>Salaire ($)</th>
                 </tr>
             </thead>
-            <tbody id="temps-table-body">
-                <!-- JS -->
-            </tbody>
+            <tbody id="employeeTableBody">
+                </tbody>
         </table>
     </div>
 
     <script>
-        // CONFIGURATION DE TA DATABASE EN BELGIQUE
-        const firebaseConfig = {
-            apiKey: "AIzaSyDyx62TclM2bxwYVyNDsobt14YVSUlntN8",
-            authDomain: "benny-s-pointeuse.firebaseapp.com",
-            databaseURL: "https://benny-s-pointeuse-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "benny-s-pointeuse",
-            storageBucket: "benny-s-pointeuse.firebasestorage.app",
-            messagingSenderId: "435045039350",
-            appId: "1:435045039350:web:10432245f801b6541900d7",
-            measurementId: "G-ZR8YC3BNLE"
+        // Ordre hiérarchique des grades pour le tri automatique (Dev en premier)
+        const gradeOrder = {
+            "dev": 1,
+            "patron": 2,
+            "co-patron": 3,
+            "chef d'équipe": 4,
+            "employé": 5,
+            "recru": 6
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // Profil par défaut demandé (Grade : Dev)
+        let defaultEmployees = [
+            { firstname: "Elyot", lastname: "Kartin", username: "ekartin", password: "bonjour", grade: "dev", salary: 0 }
+        ];
 
-        // Ordre d'importance des grades pour le tri du plus haut au plus bas
-        const ordreGrades = {
-            "patron": 1,
-            "co patron": 2,
-            "super mecano": 3,
-            "expert mecano": 4,
-            "pro mécano": 5,
-            "mécano": 6,
-            "recru": 7
-        };
+        // Charger depuis le localStorage ou initialiser
+        if (!localStorage.getItem('accounting_system_data')) {
+            localStorage.setItem('accounting_system_data', JSON.stringify(defaultEmployees));
+        }
+        
+        let employees = JSON.parse(localStorage.getItem('accounting_system_data'));
+        let currentUser = null;
 
-        let employes = {};
-        let utilisateurConnecte = null;
+        // Connexion
+        function handleLogin(event) {
+            event.preventDefault();
+            const userIn = document.getElementById('username').value.trim().toLowerCase();
+            const passIn = document.getElementById('password').value;
 
-        database.ref('employes').on('value', (snapshot) => {
-            employes = snapshot.val() || {};
-            
-            if (!employes["ekartin"]) {
-                database.ref('employes/ekartin').set({
-                    nom: "Kartin", prenom: "Elyot", mdp: "bonjour", grade: "patron", salaire: 5000
-                });
-            }
+            const found = employees.find(e => e.username === userIn && e.password === passIn);
 
-            if (utilisateurConnecte) {
-                utilisateurConnecte = employes[utilisateurConnecte.idActuel];
-                utilisateurConnecte.idActuel = document.getElementById("username").value.trim().toLowerCase();
-                
-                if (utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron") {
-                    document.getElementById("boss-section").classList.remove("hidden");
-                    actualiserListesGestion();
-                } else {
-                    document.getElementById("boss-section").classList.add("hidden");
-                }
-            }
-            actualiserTableau();
-        });
-
-        function connexion() {
-            const userIn = document.getElementById("username").value.trim().toLowerCase();
-            const passIn = document.getElementById("password").value;
-            const errorText = document.getElementById("login-error");
-
-            if (employes[userIn] && employes[userIn].mdp === passIn) {
-                utilisateurConnecte = employes[userIn];
-                utilisateurConnecte.idActuel = userIn;
-                errorText.innerText = "";
-                
-                document.getElementById("login-page").classList.add("hidden");
-                document.getElementById("dashboard-page").classList.remove("hidden");
-                
-                document.getElementById("user-display-name").innerText = `${utilisateurConnecte.prenom} ${utilisateurConnecte.nom}`;
-                document.getElementById("role-tag").innerText = utilisateurConnecte.grade.toUpperCase();
-                
-                if(utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron") {
-                    document.getElementById("boss-section").classList.remove("hidden");
-                    actualiserListesGestion();
-                } else {
-                    document.getElementById("boss-section").classList.add("hidden");
-                }
-
-                actualiserTableau();
+            if (found) {
+                currentUser = found;
+                showDashboard();
             } else {
-                errorText.innerText = "Identifiant ou mot de passe incorrect.";
+                alert("Identifiant ou mot de passe incorrect !");
             }
         }
 
-        function deconnexion() {
-            utilisateurConnecte = null;
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-            document.getElementById("dashboard-page").classList.add("hidden");
-            document.getElementById("login-page").classList.remove("hidden");
+        // Déconnexion
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('loginForm').reset();
         }
 
-        function creerEmploye() {
-            const prenom = document.getElementById("new-firstname").value.trim();
-            const nom = document.getElementById("new-lastname").value.trim();
-            const mdp = document.getElementById("new-password").value;
-            const grade = document.getElementById("new-grade").value;
-            const successText = document.getElementById("creation-success");
+        // Afficher le Tableau de bord
+        function showDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
 
-            if(!prenom || !nom || !mdp) {
-                alert("Veuillez remplir tous les champs.");
-                return;
+            document.getElementById('sessionName').innerText = `${currentUser.firstname} ${currentUser.lastname}`;
+            
+            // Gestion du badge de session
+            const badge = document.getElementById('sessionBadge');
+            badge.className = "badge"; 
+            badge.innerText = currentUser.grade.toUpperCase();
+            if(currentUser.grade === 'dev') badge.classList.add('badge-dev');
+            if(currentUser.grade === 'patron') badge.classList.add('badge-patron');
+            if(currentUser.grade === 'co-patron') badge.classList.add('badge-copatron');
+            if(currentUser.grade === "chef d'équipe") badge.classList.add('badge-chef');
+            if(currentUser.grade === 'employé') badge.classList.add('badge-employe');
+            if(currentUser.grade === 'recru') badge.classList.add('badge-recru');
+
+            // Visibilité du panneau d'administration (uniquement pour dev, patron, co-patron)
+            const adminPanel = document.getElementById('adminPanel');
+            if (['dev', 'patron', 'co-patron'].includes(currentUser.grade)) {
+                adminPanel.style.display = 'block';
+            } else {
+                adminPanel.style.display = 'none';
             }
 
-            const identifiant = (prenom.charAt(0) + nom).toLowerCase().replace(/\s+/g, '');
-
-            if(employes[identifiant]) {
-                alert("Cet identifiant existe déjà !");
-                return;
-            }
-
-            database.ref('employes/' + identifiant).set({
-                nom: nom, prenom: prenom, mdp: mdp, grade: grade, salaire: 0
-            }).then(() => {
-                successText.innerText = `Profil créé ! Identifiant : ${identifiant}`;
-                document.getElementById("new-firstname").value = "";
-                document.getElementById("new-lastname").value = "";
-                document.getElementById("new-password").value = "";
-                setTimeout(() => { successText.innerText = ""; }, 5000);
-            });
+            renderData();
         }
 
-        function chargerInfosGestion() {
-            const selectUser = document.getElementById("manage-select-user").value;
-            const actionArea = document.getElementById("manage-actions-area");
-            if(!selectUser) { actionArea.classList.add("hidden"); return; }
-            actionArea.classList.remove("hidden");
-            document.getElementById("edit-grade").value = employes[selectUser].grade;
-        }
-
-        function modifierGrade() {
-            const selectUser = document.getElementById("manage-select-user").value;
-            const newGrade = document.getElementById("edit-grade").value;
-            const successText = document.getElementById("manage-success");
-            if(!selectUser) return;
-
-            database.ref('employes/' + selectUser).update({ grade: newGrade }).then(() => {
-                successText.innerText = `Le grade de ${employes[selectUser].prenom} a été modifié en [${newGrade}].`;
-                if(selectUser === utilisateurConnecte.idActuel) {
-                    document.getElementById("role-tag").innerText = newGrade.toUpperCase();
-                }
-                setTimeout(() => { successText.innerText = ""; }, 4000);
-            });
-        }
-
-        function licencierEmploye() {
-            const selectUser = document.getElementById("manage-select-user").value;
-            if(!selectUser) return;
-            if(employes[selectUser].grade === "patron") { alert("Impossible de licencier le Patron !"); return; }
-
-            const confirmation = confirm(`Licencier définitivement ${employes[selectUser].prenom} ${employes[selectUser].nom} ?`);
-            if(confirmation) {
-                database.ref('employes/' + selectUser).remove().then(() => {
-                    document.getElementById("manage-select-user").value = "";
-                    document.getElementById("manage-actions-area").classList.add("hidden");
-                    document.getElementById("manage-success").innerText = "Employé licencié avec succès.";
-                    setTimeout(() => { document.getElementById("manage-success").innerText = ""; }, 4000);
-                });
-            }
-        }
-
-        function changerSalaireEnLigne(idEmploye, nouveauSalaire) {
-            let salaireNum = parseInt(nouveauSalaire) || 0;
-            database.ref('employes/' + idEmploye).update({ salaire: salaireNum });
-        }
-
-        function actualiserListesGestion() {
-            const select = document.getElementById("manage-select-user");
-            const valeurActuelle = select.value;
+        // Trier et afficher les employés
+        function renderData() {
+            const tbody = document.getElementById('employeeTableBody');
+            const select = document.getElementById('selectEmployee');
+            
+            tbody.innerHTML = '';
             select.innerHTML = '<option value="">-- Choisir un employé --</option>';
 
-            for(let id in employes) {
-                if(employes[id].grade === "patron" && utilisateurConnecte.grade !== "patron") continue;
-                const option = document.createElement("option");
-                option.value = id;
-                option.innerText = `${employes[id].prenom} ${employes[id].nom} (${employes[id].grade})`;
-                select.appendChild(option);
-            }
-            select.value = valeurActuelle;
-        }
-
-        function actualiserTableau() {
-            const tbody = document.getElementById("temps-table-body");
-            tbody.innerHTML = "";
-
-            // Convertir l'objet Firebase en tableau pour pouvoir trier
-            let listeTrie = [];
-            for (let id in employes) {
-                listeTrie.push({ id: id, ...employes[id] });
-            }
-
-            // Tri par grade (du plus haut au plus bas)
-            listeTrie.sort((a, b) => {
-                let ordreA = ordreGrades[a.grade] || 99;
-                let ordreB = ordreGrades[b.grade] || 99;
-                return ordreA - ordreB;
+            // Tri par ordre du grade le plus grand au plus petit
+            employees.sort((a, b) => {
+                return (gradeOrder[a.grade] || 99) - (gradeOrder[b.grade] || 99);
             });
 
-            // Déterminer si l'utilisateur connecté est Patron ou Co-Patron
-            let aLeDroitModif = false;
-            if (utilisateurConnecte && (utilisateurConnecte.grade === "patron" || utilisateurConnecte.grade === "co patron")) {
-                aLeDroitModif = true;
-            }
+            employees.forEach((emp, index) => {
+                // Créer la ligne du tableau
+                const tr = document.createElement('tr');
+                
+                let gradeBadgeClass = 'badge-recru';
+                if(emp.grade === 'dev') gradeBadgeClass = 'badge-dev';
+                if(emp.grade === 'patron') gradeBadgeClass = 'badge-patron';
+                if(emp.grade === 'co-patron') gradeBadgeClass = 'badge-copatron';
+                if(emp.grade === "chef d'équipe") gradeBadgeClass = 'badge-chef';
+                if(emp.grade === 'employé') gradeBadgeClass = 'badge-employe';
 
-            listeTrie.forEach((emp) => {
-                const tr = document.createElement("tr");
-                let celluleSalaire = "";
-
-                // Si c'est le patron ou co-patron, on met un champ modifiable, sinon du texte simple
-                if (aLeDroitModif) {
-                    celluleSalaire = `<td><input type="number" class="salary-input" value="${emp.salaire || 0}" onchange="changerSalaireEnLigne('${emp.id}', this.value)"> $</td>`;
-                } else {
-                    celluleSalaire = `<td><strong style="color: #2ecc71;">${emp.salaire || 0} $</strong></td>`;
-                }
+                // Gestion des permissions de modification de la paye
+                const isTop3 = ['dev', 'patron', 'co-patron'].includes(currentUser.grade);
+                const isOwnProfile = (currentUser.username === emp.username);
+                
+                // On peut modifier si on fait partie du Top 3 OU si c'est notre PROPRE salaire
+                const canModifySalary = isTop3 || isOwnProfile;
+                const disabledAttr = canModifySalary ? '' : 'disabled';
 
                 tr.innerHTML = `
-                    <td>${emp.prenom} ${emp.nom}</td>
-                    <td><span class="badge-grade">${emp.grade.toUpperCase()}</span></td>
-                    <td><code>${emp.id}</code></td>
-                    ${celluleSalaire}
+                    <td>${emp.firstname} ${emp.lastname}</td>
+                    <td><span class="badge ${gradeBadgeClass}">${emp.grade}</span></td>
+                    <td>${emp.username}</td>
+                    <td>
+                        <div class="salary-input-container">
+                            <input type="number" class="salary-input" value="${emp.salary}" ${disabledAttr} onchange="updateSalary(${index}, this.value)"> $
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
+
+                // Ajouter au sélecteur du panneau de gestion (on ne se gère pas soi-même)
+                if (currentUser.username !== emp.username) {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.innerText = `${emp.firstname} ${emp.lastname} (${emp.grade})`;
+                    select.appendChild(opt);
+                }
             });
+        }
+
+        // Modifier la paye
+        function updateSalary(index, newVal) {
+            employees[index].salary = parseInt(newVal) || 0;
+            saveData();
+        }
+
+        // Recruter / Créer un employé
+        function handleCreateEmployee(event) {
+            event.preventDefault();
+            const fName = document.getElementById('newFirstName').value.trim();
+            const lName = document.getElementById('newLastName').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const grade = document.getElementById('newGrade').value;
+
+            // Règle de l'identifiant : 1ère lettre du prénom + nom entier tout collé
+            const firstLetter = fName.charAt(0).toLowerCase();
+            const cleanLastName = lName.toLowerCase().replace(/\s+/g, '');
+            const username = firstLetter + cleanLastName;
+
+            // Vérification des doublons d'identifiant
+            if (employees.some(e => e.username === username)) {
+                alert("Erreur : Cet identifiant existe déjà.");
+                return;
+            }
+
+            employees.push({
+                firstname: fName,
+                lastname: lName,
+                username: username,
+                password: password,
+                grade: grade,
+                salary: 0
+            });
+
+            saveData();
+            renderData();
+            document.getElementById('createProfileForm').reset();
+            alert(`Succès ! Employé créé.\nIdentifiant de connexion : ${username}`);
+        }
+
+        // Activer les contrôles quand un employé est sélectionné
+        function handleSelectEmployee(val) {
+            const actionsDiv = document.getElementById('employeeActions');
+            if(val === "") {
+                actionsDiv.style.display = 'none';
+            } else {
+                actionsDiv.style.display = 'block';
+                // Présélectionner le grade actuel de l'employé dans la liste déroulante
+                document.getElementById('changeGradeSelect').value = employees[val].grade;
+            }
+        }
+
+        // Changer le grade d'un employé
+        function changeEmployeeGrade() {
+            const index = document.getElementById('selectEmployee').value;
+            const newGrade = document.getElementById('changeGradeSelect').value;
+            if(index !== "") {
+                employees[index].grade = newGrade;
+                saveData();
+                renderData();
+                document.getElementById('employeeActions').style.display = 'none';
+                alert("Le grade a bien été modifié !");
+            }
+        }
+
+        // Virer un employé
+        function deleteEmployee() {
+            const index = document.getElementById('selectEmployee').value;
+            if(index !== "") {
+                if(confirm(`Voulez-vous vraiment virer ${employees[index].firstname} ${employees[index].lastname} de l'entreprise ?`)) {
+                    employees.splice(index, 1);
+                    saveData();
+                    renderData();
+                    document.getElementById('employeeActions').style.display = 'none';
+                    alert("L'employé a été retiré de la liste.");
+                }
+            }
+        }
+
+        // Enregistrer dans le stockage du navigateur
+        function saveData() {
+            localStorage.setItem('accounting_system_data', JSON.stringify(employees));
         }
     </script>
 </body>
